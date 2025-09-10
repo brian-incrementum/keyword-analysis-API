@@ -12,5 +12,9 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Use shell form instead of exec form for CMD
-CMD uvicorn app:app --host 0.0.0.0 --port 8000
+# Healthcheck using Python stdlib (no curl needed)
+HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD python -c "import urllib.request,sys; \
+    sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/health').getcode()==200 else sys.exit(1)"
+
+# Use exec form for CMD to avoid shell issues
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
