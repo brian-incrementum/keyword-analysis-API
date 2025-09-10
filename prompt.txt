@@ -1,0 +1,65 @@
+prompt_template: |
+  Analyze the following search keyword used by a customer on Amazon and determine its type and relevance score for our hero product.
+  
+  Hero Product Details:
+  ASIN: B018DQI53G
+  Product title: Thermajohn Long Johns Thermal Underwear for Men Fleece Lined Base Layer Set for Cold Weather (Medium, Black)
+  Brand: Thermajohn
+  Rating: 4.6
+  Review count: 53869
+  Price: 31.49
+  Product features: Heat Retention: When it comes to warmth and everyday wear, these long johns for men is designed specifically for you to stay protected from the cold.|Ultra Soft Fleece: Designed with a fleece lining & quality material, these ultra soft mens thermal underwear set will keep you feeling comfortable throughout the day.|Moisture Wicking: Stay dry with these long underwear mens as they're made from breathable fabric that effectively wicks away moisture and perspiration.|4 Way Stretch: Made with stretchable material, these thermals for men allows you freedom of movement with no chafing or bunching up when you move.|Layer Up: Layering is essential to ward off the cold, so bundle up with a pair of mens thermals this winter and stay comfortable while outside or in bed as a pajama.
+  
+  Input:
+    keyword: "{{keyword}}"
+  
+  Task:
+  1. Classify the keyword into one of these types:
+     - generic: General/category keywords (e.g., "thermal underwear", "long johns", "base layer", "cold weather gear", "best deals")
+     - our_brand: Keywords containing our brand name (Thermajohn) or specific product references
+     - competitor_brand: Keywords containing competitor brand names
+     
+  
+  2. Score the keyword relevance from 1-10 for our product:
+     - 1-3: Low relevance (unrelated or competitor-only keywords)
+     - 4-6: Medium relevance (generic category keywords)
+     - 7-9: High relevance (our brand or highly relevant generic)
+     - 10: Perfect match (exact match for our brand/product)
+  
+  Response Format (JSON):
+  {
+    "keyword": "the analyzed keyword",
+    "type": "generic|our_brand|competitor_brand|mixed_our_brand|mixed_competitor_brand",
+    "score": 1-10,
+    "reasoning": "Brief explanation for the classification and score"
+  }
+
+examples:
+  - input:
+      keyword: "mens thermal underwear fleece lined"
+    output:
+      keyword: "mens thermal underwear fleece lined"
+      type: "generic"
+      score: 8
+      reasoning: "Highly relevant generic keyword matching our product's key features"
+  
+  - input:
+      keyword: "Thermajohn long johns"
+    output:
+      keyword: "Thermajohn long johns"
+      type: "our_brand"
+      score: 10
+      reasoning: "Perfect match containing our exact brand name with product type"
+  
+  - input:
+      keyword: "Carhartt base layer"
+    output:
+      keyword: "Carhartt base layer"
+      type: "competitor_brand"
+      score: 2
+      reasoning: "Competitor brand keyword, low relevance for our product"
+
+parameters:
+  temperature: 0.3
+  max_tokens: 150
+  response_format: json
