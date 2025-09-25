@@ -2,6 +2,7 @@
 Pydantic models for the keyword analysis API
 """
 from typing import List, Dict, Any, Optional, Union
+from typing import Literal
 from pydantic import BaseModel, Field, validator
 
 
@@ -119,3 +120,44 @@ class KeywordAnalysisResponse(BaseModel):
     analysis_results: List[KeywordResult]
     summary: AnalysisSummary
     errors: Optional[List[str]] = None
+
+
+class KeywordVolumeRow(BaseModel):
+    """Single keyword row used for root aggregation"""
+    keyword: str = Field(..., min_length=1)
+    search_volume: int = Field(..., ge=0)
+
+
+class RootAnalysisRequest(BaseModel):
+    """Request payload for bulk root keyword aggregation"""
+    keywords: List[KeywordVolumeRow] = Field(..., min_items=1)
+    mode: Literal["full", "simple"] = Field(default="full")
+
+
+class RootAnalysisMember(BaseModel):
+    """Original keyword row contributing to a normalized root"""
+    keyword: str
+    search_volume: int
+
+
+class RootAnalysisItem(BaseModel):
+    """Normalized root output item"""
+    normalized_term: str
+    frequency: int
+    search_volume: int
+    relative_volume: Optional[float] = None
+    members: List[RootAnalysisMember]
+
+
+class AutoConfigUpdates(BaseModel):
+    """Auto-learned stopwords/irregulars added during processing"""
+    new_stopwords: List[str] = Field(default_factory=list)
+    new_irregular_singulars: Dict[str, str] = Field(default_factory=dict)
+
+
+class RootAnalysisResponse(BaseModel):
+    """Response payload returned by the root analysis endpoint"""
+    mode: Literal["full", "simple"]
+    total_keywords: int
+    results: List[RootAnalysisItem]
+    auto_config_updates: AutoConfigUpdates

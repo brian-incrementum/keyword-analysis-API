@@ -13,10 +13,13 @@ from models import (
     KeywordAnalysisRequest,
     KeywordAnalysisResponse,
     ProductDetails,
-    AnalysisSummary
+    AnalysisSummary,
+    RootAnalysisRequest,
+    RootAnalysisResponse,
 )
 from keepa_client import get_basic_product_details
 from keyword_analyzer import analyze_keywords
+from root_analysis_service import generate_root_analysis
 
 # Load environment variables
 load_dotenv()
@@ -49,7 +52,8 @@ async def root():
         "name": "Keyword Analysis API",
         "version": "1.0.0",
         "endpoints": {
-            "POST /analyze-keywords": "Analyze keywords for product relevance"
+            "POST /analyze-keywords": "Analyze keywords for product relevance",
+            "POST /root-analysis": "Generate normalized root keywords from CSV data",
         },
         "documentation": "/docs"
     }
@@ -159,6 +163,27 @@ async def analyze_keywords_endpoint(request: KeywordAnalysisRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Analysis failed: {str(e)}"
         )
+
+
+@app.post("/root-analysis", response_model=RootAnalysisResponse)
+async def root_analysis_endpoint(request: RootAnalysisRequest):
+    """Aggregate uploaded keyword rows into normalized roots."""
+
+    rows = [(row.keyword.strip(), row.search_volume) for row in request.keywords if row.keyword.strip()]
+    if not rows:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No valid keywords supplied")
+
+    try:
+        payload = generate_root_analysis(rows, request.mode)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except Exception as exc:  # pragma: no cover - safeguard for unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Root analysis failed: {str(exc)}"
+        ) from exc
+
+    return RootAnalysisResponse(**payload)
 
 
 @app.get("/health")
