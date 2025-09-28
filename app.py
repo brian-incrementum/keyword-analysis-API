@@ -16,10 +16,12 @@ from models import (
     AnalysisSummary,
     RootAnalysisRequest,
     RootAnalysisResponse,
+    NegativePhraseRequest,
 )
 from keepa_client import get_basic_product_details
 from keyword_analyzer import analyze_keywords
 from root_analysis_service import generate_root_analysis
+from negative_phrase_service import generate_negative_phrases
 
 # Load environment variables
 load_dotenv()
@@ -54,6 +56,7 @@ async def root():
         "endpoints": {
             "POST /analyze-keywords": "Analyze keywords for product relevance",
             "POST /root-analysis": "Generate normalized root keywords from CSV data",
+            "POST /negative-phrase": "Generate Amazon PPC negative keyword list",
         },
         "documentation": "/docs"
     }
@@ -184,6 +187,41 @@ async def root_analysis_endpoint(request: RootAnalysisRequest):
         ) from exc
 
     return RootAnalysisResponse(**payload)
+
+
+@app.post("/negative-phrase", response_model=List[str])
+async def negative_phrase_endpoint(request: NegativePhraseRequest) -> List[str]:
+    """Generate negative keyword phrases for Amazon PPC campaigns."""
+
+    try:
+        keepa_data = get_basic_product_details(request.asin, request.country)
+    except Exception as exc:  # pragma: no cover - Keepa availability
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch product details from Keepa: {str(exc)}"
+        ) from exc
+
+    product_details = ProductDetails(**keepa_data)
+
+    try:
+        phrases = await generate_negative_phrases(product_details)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        ) from exc
+    except RuntimeError as exc:  # pragma: no cover - upstream issues
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc)
+        ) from exc
+    except Exception as exc:  # pragma: no cover - safeguard
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Negative phrase generation failed: {str(exc)}"
+        ) from exc
+
+    return phrases
 
 
 @app.get("/health")

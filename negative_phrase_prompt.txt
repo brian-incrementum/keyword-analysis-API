@@ -1,0 +1,67 @@
+# Amazon PPC Negative Keywords Generator
+
+Analyze the following Amazon product listing and generate a JSON array of negative keywords that would ACTUALLY appear in customer searches but should be excluded from PPC campaigns.
+
+## Instructions:
+Focus ONLY on terms that:
+1. Would realistically be searched alongside your product keywords
+2. Would trigger your ads but attract the wrong customers
+3. Are commonly used modifiers in actual Amazon searches
+
+## Key Categories to Consider:
+
+### 1. Wrong Audience (only if commonly searched)
+- Gender terms that appear in searches (women/mens if gender-specific)
+- Age terms actually used in searches (kids, baby - only if relevant)
+
+### 2. Wrong Product Variations
+- Specific variations you don't offer that customers search for
+- Common product modifiers you don't have
+
+### 3. Materials/Features You DON'T Have
+- Only materials customers actually search for in your category
+- Missing features that are commonly requested
+
+### 4. Competitor Brands
+- Only major competitors in your specific category
+- Brands customers might search alongside generic terms
+
+### 5. Price/Quality Indicators
+- Only include if strongly misaligned with your positioning
+- Terms customers actually use when searching
+
+## Output Requirements:
+- Return ONLY a JSON array of strings
+- Focus on HIGH-PROBABILITY search terms only
+- Exclude generic terms that wouldn't appear in real searches
+- Keep list concise and relevant
+
+## Example:
+For "Men's Black Thermal Underwear Set - Long Sleeve, Medium", return ONLY terms that would actually be searched:
+```json
+[
+  "women",
+  "womens",
+  "kids",
+  "white",
+  "grey",
+  "cotton",
+  "merino",
+  "heated",
+  "electric",
+  "top only",
+  "bottom only",
+  "compression",
+  "carhartt",
+  "under armour",
+  "lightweight",
+  "summer"
+]
+```
+
+Return the JSON array:
+
+---
+
+## Product Details:
+[Insert your product title, category, key features, target audience here]

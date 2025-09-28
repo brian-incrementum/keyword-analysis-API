@@ -73,6 +73,28 @@ class KeywordAnalysisRequest(BaseModel):
         return True
 
 
+class NegativePhraseRequest(BaseModel):
+    """Request payload for generating negative keyword phrases via ASIN."""
+    asin: str = Field(..., min_length=10, max_length=10)
+    country: str = Field(default="US")
+
+    @validator('asin')
+    def validate_asin_format(cls, value: str) -> str:
+        if not value.isalnum():
+            raise ValueError("ASIN must be alphanumeric")
+        return value.upper()
+
+    @validator('country')
+    def validate_country_code(cls, value: str) -> str:
+        valid_countries = [
+            "US", "GB", "UK", "DE", "FR", "JP", "CA", "IT", "ES",
+            "IN", "MX", "BR", "AU", "NL"
+        ]
+        if value.upper() not in valid_countries:
+            raise ValueError(f"Country must be one of: {', '.join(valid_countries)}")
+        return value.upper()
+
+
 class ProductDetails(BaseModel):
     """Product details model (from Keepa or user description)"""
     asin: Optional[str] = None
